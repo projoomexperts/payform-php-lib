@@ -1,0 +1,22 @@
+{
+    "name": "bambora/payform",
+    "type": "library",
+    "description": "Bambora PayForm PHP Library",
+    "keywords": ["payment", "bambora", "payform"],
+    "homepage": "https://payform.bambora.com",
+    "authors": [
+        {
+            "name": "Bambora PayForm",
+            "homepage": "https://payform.bambora.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Bambora": "lib/"
+        }
+    },
+    "require-dev": {
+		"phpunit/phpunit": "4.8.*",
+		"mockery/mockery": "dev-master"
+	}
+}
