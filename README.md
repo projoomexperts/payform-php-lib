@@ -3,7 +3,7 @@ Bambora PayForm PHP Rest Library
 
 See documentation at https://payform.bambora.com/docs/web_payments/
 
-If you want to implemented embedded card payments, please contatct Bambora PayForm support for more details.
+If you want to implement embedded card payments, please contatct Bambora PayForm support for more details.
 
 To install with composer, add following to composer.json and run ** composer update **
 
