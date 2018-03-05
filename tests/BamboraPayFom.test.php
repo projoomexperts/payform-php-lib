@@ -306,7 +306,7 @@ class BamboraPayFomTest extends PHPUnit_Framework_TestCase
 			'authcode' => 'A2080435816D3C7C893E246B3651F12F80131984617468B0426DC6D9DD9ED0ED',
 			'card_token' => 'card_token',
 			'api_key' => 'TESTAPIKEY'
-			))->once()->andReturn(json_encode($response));
+		))->once()->andReturn(json_encode($response));
 
 		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
 
@@ -378,5 +378,79 @@ class BamboraPayFomTest extends PHPUnit_Framework_TestCase
 		}
 
 		$this->assertEquals($msg, 'PayForm::checkReturn - unable to calculate MAC, not enough data given');
+	}
+
+	public function testGetMerchantPaymentMethods()
+	{
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$response = array(
+			'result' => 0,
+			'payment_methods' => array(
+				array(
+					'name' => 'Mobilepay',
+					'selected_value' => 'mobilepay',
+					'group' => 'wallets',
+					'min_amount' => 0,
+					'max_amount' => 100000,
+					'img' => 'https://www.payform.bambora.com',
+					'img_timestamp' => '1479131257',
+					'currency' => array(
+						'EUR',
+						'SEK'
+					)
+				)
+			)
+		);
+
+		$connector->shouldReceive("request")->with("merchant_payment_methods", array(
+			'authcode' => '7AEBC755706F5699162A4359A6947DD1CEA8F65FB7E6C38C6E0ED3C03B808E07',
+			'version' => '2',
+			'api_key' => 'TESTAPIKEY',
+			'currency' => ''
+		))->once()->andReturn(json_encode($response));
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$request = $payForm->getMerchantPaymentMethods();
+
+		$this->assertEquals(json_encode($request), json_encode($response));
+	}
+
+	public function testGetMerchantPaymentMethodsSEKCurrency()
+	{
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$response = array(
+			'result' => 0,
+			'payment_methods' => array(
+				array(
+					'name' => 'Mobilepay',
+					'selected_value' => 'mobilepay',
+					'group' => 'wallets',
+					'min_amount' => 0,
+					'max_amount' => 100000,
+					'img' => 'https://www.payform.bambora.com',
+					'img_timestamp' => '1479131257',
+					'currency' => array(
+						'EUR', 
+						'SEK'
+					)
+				)
+			)
+		);
+
+		$connector->shouldReceive("request")->with("merchant_payment_methods", array(
+			'authcode' => '7AEBC755706F5699162A4359A6947DD1CEA8F65FB7E6C38C6E0ED3C03B808E07',
+			'version' => '2',
+			'currency' => 'SEK',
+			'api_key' => 'TESTAPIKEY'
+		))->once()->andReturn(json_encode($response));
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$request = $payForm->getMerchantPaymentMethods('SEK');
+
+		$this->assertEquals(json_encode($request), json_encode($response));
 	}
 }

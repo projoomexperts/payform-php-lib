@@ -145,11 +145,12 @@ class PayForm
 		));
 	}
 
-	public function getMerchantPaymentMethods()
+	public function getMerchantPaymentMethods($currency = '')
 	{
 		return $this->makeRequest('merchant_payment_methods', array(
 			'authcode' => $this->calcAuthcode($this->api_key),
-			'version' => '1'
+			'version' => '2',
+			'currency' => $currency
 		));
 	}
 
