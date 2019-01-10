@@ -9,6 +9,8 @@ require dirname(__FILE__) . '/../vendor/autoload.php';
 
 $payForm = new Bambora\Payform('api_key', 'private_key');
 
+$payment_return = '';
+
 if(isset($_GET['action']))
 {
 	if($_GET['action'] == 'auth-payment')
@@ -52,6 +54,8 @@ if(isset($_GET['action']))
 		}
 		else
 		{
+			if($method === 'iframe')
+				$returnUrl .= '&iframe';
 			$paymentMethod = array(
 				'type' => 'e-payment', 
 				'return_url' => $returnUrl,
@@ -78,6 +82,13 @@ if(isset($_GET['action']))
 					echo json_encode(array(
 						'token' => $result->token,
 						'url' => $payForm::API_URL . '/charge'
+					));
+				}
+				else if($method === 'iframe')
+				{
+					header('Cache-Control: no-cache');
+					echo json_encode(array(
+						'url' => $payForm::API_URL . '/token/' . $result->token
 					));
 				}
 				else
@@ -130,11 +141,11 @@ else if(isset($_GET['return-from-pay-page']))
 
 		if($result->RETURN_CODE == 0)
 		{
-			exit('Payment succeeded, <a href="index.php">start again</a>');	
+			$payment_return = 'Payment succeeded';
 		}
 		else
 		{
-			exit('Payment failed (RETURN_CODE: ' . $result->RETURN_CODE . '), <a href="index.php">start again</a>');
+			$payment_return = 'Payment failed (RETURN_CODE: ' . $result->RETURN_CODE . ')';
 		}
 	}
 	catch(Bambora\PayformException $e)
@@ -172,11 +183,43 @@ catch(Bambora\PayformException $e)
 			{
 				text-decoration: none;
 			}
+			#overlay 
+			{
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: #000;
+				filter:alpha(opacity=50);
+				-moz-opacity:0.5;
+				-khtml-opacity: 0.5;
+				opacity: 0.5;
+				z-index: 1;
+			}
+
+			#payment_frame
+			{
+				height : 650px;
+				width : 500px;
+				position: absolute;
+				z-index: 2;
+				margin-left: -250px;
+				left: 50%;
+				top: 20px;
+			}
 		</style>	
 	</head>
 	<body>
 		<div class="container">
-			<div class="row">
+			<?php if($payment_return): ?>
+				<div class="row">
+					<div class="col-md-12">
+						<div class="alert alert-success" role="alert"><?=$payment_return;?>, <a target="_top" href="index.php">start again</a></div>
+					</div>
+				</div>
+			<?php endif; ?>
+			<div class="row" id="mainpage">
 				<div class="col-md-12">
 					<h1>PayForm PHP Library Example</h1>
 
@@ -239,6 +282,9 @@ catch(Bambora\PayformException $e)
 					<hr>
 					<h2>Go to pay page</h2>
 					<a class="btn btn-default" href="index.php?action=auth-payment&method=button">Go to pay page</a>
+					<hr>
+					<h2>Open minified card form in iframe</h2>
+					<a class="btn btn-default" href="#" id="iframe">Open iframe</a>
 				</div>
 			</div>
 		</div>
@@ -291,6 +337,36 @@ catch(Bambora\PayformException $e)
 				})
 			})
 		})
+		$("#iframe").click(function(e)
+		{
+			e.preventDefault()
+			var initPayment = $.get("?action=auth-payment&method=iframe")
+			initPayment.done(function(data) {
+				var response
+				try
+				{
+					response = $.parseJSON(data)
+				}
+				catch(err)
+				{
+					card_payment_result.html('Unable to create card payment. Please check that api key and private key are correct.')
+					alert('Unable to create card payment. Please check that api key and private key are correct.')
+					return
+				}
+				var overlay = $('<div id="overlay"></div>').appendTo(document.body);
+				$('<iframe>', {
+					src: response.url+"?minified",
+					id:  'payment_frame',
+					frameborder: 0,
+					scrolling: 'no'
+				}).appendTo(document.body);
+			})
+		})
+
+		//if in iframe, prevent inception
+		if(window.self !== window.top)
+			$("#mainpage").hide();
+		
 	</script>
 	</body>
 </html>
