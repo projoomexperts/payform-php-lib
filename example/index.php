@@ -45,28 +45,18 @@ if(isset($_GET['action']))
 			'type' => 1
 		));
 
-		if($method === 'card-payment')
-		{
-			$paymentMethod = array(
-				'type' => 'card', 
-				'register_card_token' => 0
-			);
-		}
-		else
-		{
-			if($method === 'iframe')
-				$returnUrl .= '&iframe';
-			$paymentMethod = array(
-				'type' => 'e-payment', 
-				'return_url' => $returnUrl,
-				'notify_url' => $returnUrl,
-				'lang' => 'fi'
-			);
+		if($method === 'iframe')
+			$returnUrl .= '&iframe';
+		$paymentMethod = array(
+			'type' => 'e-payment', 
+			'return_url' => $returnUrl,
+			'notify_url' => $returnUrl,
+			'lang' => 'fi'
+		);
 
-			if(isset($_GET['selected']))
-			{
-				$paymentMethod['selected'] = array(strip_tags($_GET['selected']));
-			}
+		if(isset($_GET['selected']))
+		{
+			$paymentMethod['selected'] = array(strip_tags($_GET['selected']));
 		}
 
 		$payForm->addPaymentMethod($paymentMethod);
@@ -77,14 +67,7 @@ if(isset($_GET['action']))
 
 			if($result->result == 0)
 			{
-				if($method === 'card-payment')
-				{
-					echo json_encode(array(
-						'token' => $result->token,
-						'url' => $payForm::API_URL . '/charge'
-					));
-				}
-				else if($method === 'iframe')
+				if($method === 'iframe')
 				{
 					header('Cache-Control: no-cache');
 					echo json_encode(array(
@@ -111,19 +94,6 @@ if(isset($_GET['action']))
 
 				exit($error_msg);
 			}
-		}
-		catch(Bambora\PayformException $e)
-		{
-			exit('Got the following exception: ' . $e->getMessage());
-		}
-	}
-	else if($_GET['action'] === 'check-payment-status')
-	{
-		try
-		{
-			$result = $payForm->checkStatusWithToken($_GET['token']);
-
-			echo $result->result == 0 ? 'success' : 'failed';
 		}
 		catch(Bambora\PayformException $e)
 		{
@@ -222,55 +192,6 @@ catch(Bambora\PayformException $e)
 			<div class="row" id="mainpage">
 				<div class="col-md-12">
 					<h1>PayForm PHP Library Example</h1>
-
-					<h2>Embedded Card Payment</h2>
-
-					<form id="card-form" action="#" role="form" autocomplete="off">
-						<div class="form-group">
-							<label for="cardNumber">Card number</label>
-							<input type="number" id="cardNumber" lenght="30" placeholder="Enter the card number" class="form-control"/>
-						</div>
-						<div class="row">
-							<div class="col-xs-6">
-								<div class="form-group">
-									<label for="expMonth">Month</label>
-									<select id="expMonth" class="form-control card-exp-month">
-										<?php
-										for($i = 1; $i <= 12; $i++)
-											echo "<option>".str_pad($i,2,'0',STR_PAD_LEFT)."</option>";
-										?>
-									</select>
-								</div>
-							</div>
-							<div class="col-xs-6">
-								<div class="form-group">
-									<label for="expYear">Year</label>
-									<select id="expYear" class="form-control card-exp-year">
-									<?php
-									$i = $j = date("Y");
-									while($i <= $j + 5)
-										echo "<option>".$i++."</option>";
-									?>
-									</select>
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-xs-6">
-								<div class="form-group">
-									<label for="cvv">CVV</label>
-									<input type="number" id="cvv" maxlength="4" class="form-control" lenght="4" placeholder="Enter the CVV"/>
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-xs-12">
-								<div class="form-group">
-									<input type="submit" id="card-pay" class="btn btn-primary" value="Pay"/>
-								</div>
-							</div>
-						</div>
-					</form>
 					<div class="card-payment-result text-muted"></div>
 					<hr>
 					<h2>Pay by button</h2>
@@ -290,53 +211,6 @@ catch(Bambora\PayformException $e)
 		</div>
 	<script>
 		var card_payment_result = $('.card-payment-result')
-
-		$('#card-form').submit(function(e) {
-			e.preventDefault()
-
-			card_payment_result.html('')
-			card_payment_result.append('Getting token...')
-
-			var chargeRequest = $.get("?action=auth-payment&method=card-payment")
-
-			chargeRequest.done(function(data) {
-
-				card_payment_result.append('<br>Charging the card...')
-
-				var response
-
-				try
-				{
-					response = $.parseJSON(data)
-				}
-				catch(err)
-				{
-					card_payment_result.html('Unable to create card payment. Please check that api key and private key are correct.')
-					alert('Unable to create card payment. Please check that api key and private key are correct.')
-					return
-				}
-
-				var charge = $.post(response.url, {
-					token: response.token,
-					amount: 2000,
-					card: $('#cardNumber').val(),
-					security_code: $('#cvv').val(),
-					currency: 'EUR',
-					exp_month: $('#expMonth').val(),
-					exp_year: $('#expYear').val()
-				})
-
-				charge.done(function(result) {	
-					card_payment_result.append('<br>Checking the payment status...')
-					var complete = $.get('?action=check-payment-status&token=' + response.token)
-
-					complete.done(function(data) {
-						var msg = (data === 'success') ? '<strong class="text-success">Payment was successful!</strong>' : '<strong class="text-danger">Payment failed!</strong>'
-						card_payment_result.append('<br>' + msg)
-					})
-				})
-			})
-		})
 		$("#iframe").click(function(e)
 		{
 			e.preventDefault()
