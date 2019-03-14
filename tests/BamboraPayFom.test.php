@@ -453,4 +453,108 @@ class BamboraPayFomTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals(json_encode($request), json_encode($response));
 	}
+
+	public function testGetPayment()
+	{
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$test_order_number = 'test_token';
+		$response = array('result' => 0);
+		$response = json_encode($response);
+
+		$connector->shouldReceive("request")->with("get_payment", array(
+			'version' => 'w3.1',
+			'authcode' => 'B33468AA646E3835C40929AA3361A44F4923E95D90F84CB14CDF9C70507E4384',
+			'order_number' => $test_order_number,
+			'api_key' => 'TESTAPIKEY'
+		))->once()->andReturn($response);
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$request = $payForm->getPayment($test_order_number);
+
+		$this->assertEquals($request->result, 0);
+	}
+
+	public function testGetRefund()
+	{
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$test_refund_id = 123;
+		$response = array('result' => 0);
+		$response = json_encode($response);
+
+		$connector->shouldReceive("request")->with("get_refund", array(
+			'version' => 'w3.1',
+			'authcode' => '853D72D666288F30809498FF23F2A6D7A79D6427B3CB2AB95D1F4D11948EBC7F',
+			'refund_id' => $test_refund_id,
+			'api_key' => 'TESTAPIKEY'
+		))->once()->andReturn($response);
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$request = $payForm->getRefund($test_refund_id);
+
+		$this->assertEquals($request->result, 0);
+	}
+
+	public function testCreateRefund()
+	{
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$response = array('result' => 0);
+		$response = json_encode($response);
+
+		$connector->shouldReceive("request")->with("create_refund", array(
+			'version' => 'w3.1',
+			'authcode' => '23746DEF83C7EC93A1A6D9E03E569032804535230DC3DEDDF575699456C63BFF',
+			'currency' => 'EUR',
+			'order_number' => 'a',
+			'api_key' => 'TESTAPIKEY',
+			'products' => array(
+				array(
+					'product_id' => 123, 
+					'count' => 1,
+				)
+			)
+		))->once()->andReturn($response);
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$payForm->addRefund(array(
+			'order_number' => 'a',
+			'currency' => 'EUR'
+		));
+
+		$payForm->addRefundProduct(array(
+			'product_id' => 123, 
+			'count' => 1
+		));
+
+		$request = $payForm->createRefund();
+
+		$this->assertEquals($request->result, 0);
+	}
+
+	public function testCancelRefund()
+	{
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$test_refund_id = 123;
+		$response = array('result' => 0);
+		$response = json_encode($response);
+
+		$connector->shouldReceive("request")->with("cancel_refund", array(
+			'version' => 'w3.1',
+			'authcode' => '853D72D666288F30809498FF23F2A6D7A79D6427B3CB2AB95D1F4D11948EBC7F',
+			'refund_id' => $test_refund_id,
+			'api_key' => 'TESTAPIKEY'
+		))->once()->andReturn($response);
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$request = $payForm->cancelRefund($test_refund_id);
+
+		$this->assertEquals($request->result, 0);
+	}
 }

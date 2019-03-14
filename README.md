@@ -9,7 +9,7 @@ To install with composer, add following to composer.json and run ** composer upd
 
     {
       "require": {
-        "bambora/payform": "^1.1.0"
+        "bambora/payform": "^1.2.0"
       }
     }
 
