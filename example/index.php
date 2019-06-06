@@ -7,7 +7,7 @@ require dirname(__FILE__) . '/../vendor/autoload.php';
 	require dirname(__FILE__) . '/../lib/bambora_payform_loader.php';
 */
 
-$payForm = new Bambora\Payform('api_key', 'private_key');
+$payForm = new Bambora\PayForm('api_key', 'private_key');
 
 $payment_return = '';
 
@@ -95,7 +95,7 @@ if(isset($_GET['action']))
 				exit($error_msg);
 			}
 		}
-		catch(Bambora\PayformException $e)
+		catch(Bambora\PayFormException $e)
 		{
 			exit('Got the following exception: ' . $e->getMessage());
 		}
@@ -118,7 +118,7 @@ else if(isset($_GET['return-from-pay-page']))
 			$payment_return = 'Payment failed (RETURN_CODE: ' . $result->RETURN_CODE . ')';
 		}
 	}
-	catch(Bambora\PayformException $e)
+	catch(Bambora\PayFormException $e)
 	{
 		exit('Got the following exception: ' . $e->getMessage());
 	}
@@ -133,7 +133,7 @@ try
 		exit('Unable to get the payment methods for the merchant. Please check that api key and private key are correct.');
 	}
 }
-catch(Bambora\PayformException $e)
+catch(Bambora\PayFormException $e)
 {
 	exit('Got the following exception: ' . $e->getMessage());
 }
