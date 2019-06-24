@@ -47,12 +47,17 @@ if(isset($_GET['action']))
 
 		if($method === 'iframe')
 			$returnUrl .= '&iframe';
+
 		$paymentMethod = array(
-			'type' => 'e-payment', 
 			'return_url' => $returnUrl,
 			'notify_url' => $returnUrl,
 			'lang' => 'fi'
 		);
+
+		if($method === 'embedded')
+			$paymentMethod['type'] = 'embedded';
+		else
+			$paymentMethod['type'] = 'e-payment';
 
 		if(isset($_GET['selected']))
 		{
@@ -72,6 +77,12 @@ if(isset($_GET['action']))
 					header('Cache-Control: no-cache');
 					echo json_encode(array(
 						'url' => $payForm::API_URL . '/token/' . $result->token
+					));
+				}
+				else if($method === 'embedded')
+				{
+					echo json_encode(array(
+						'token' => $result->token
 					));
 				}
 				else
@@ -126,6 +137,7 @@ else if(isset($_GET['return-from-pay-page']))
 
 try
 {
+
 	$merchantPaymentMethods = $payForm->getMerchantPaymentMethods();
 
 	if($merchantPaymentMethods->result != 0)
@@ -206,10 +218,61 @@ catch(Bambora\PayFormException $e)
 					<hr>
 					<h2>Open minified card form in iframe</h2>
 					<a class="btn btn-default" href="#" id="iframe">Open iframe</a>
+					<hr>
+					<h2>Embedded iframe card form</h2>
+					<iframe frameBorder="0" scrolling="no" id="pf-cc-iframe" height="220px" style="width:100%" src="https://payform.bambora.com/e-payments/embedded_card_form?lang=en"></iframe>
+					<a class="btn btn-default" href="#" id="inline-form">Pay with inline card form</a>
 				</div>
 			</div>
 		</div>
 	<script>
+		window.addEventListener('message', function(event) {
+			var data = JSON.parse(event.data)
+
+			if(data.valid)
+			{
+				var initEmbeddedPayment = $.get("?action=auth-payment&method=embedded")
+
+				initEmbeddedPayment.done(function(data) {
+					var response
+					try
+					{
+						response = $.parseJSON(data)
+					}
+					catch(err)
+					{
+						alert('Unable to initialize embedded card payment. Please check that api key and private key are correct.')
+						return
+					}
+
+					var payMessage = {
+						action: 'pay',
+						token: response.token
+					}
+
+					document.getElementById('pf-cc-iframe').contentWindow.postMessage(
+						JSON.stringify(payMessage),
+						'https://payform.bambora.com'
+					)
+				})
+			}
+		});
+
+		// Embedded iframe card form
+		$("#inline-form").click(function(e) {
+			e.preventDefault()
+
+			var validateMessage = {
+				action: "validate"
+			}
+
+			document.getElementById('pf-cc-iframe').contentWindow.postMessage(
+				JSON.stringify(validateMessage), 
+				'https://payform.bambora.com/'
+			)
+		})
+
+		// Open minified card form in iframe
 		var card_payment_result = $('.card-payment-result')
 		$("#iframe").click(function(e)
 		{
