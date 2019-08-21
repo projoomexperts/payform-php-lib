@@ -14,6 +14,7 @@ class PayForm
 	protected $payment_method = array();
 	protected $charge = array();
 	protected $refund = array();
+	protected $initiator = array();
 
 	const API_URL = 'https://payform.bambora.com/pbwapi';
 
@@ -62,6 +63,9 @@ class PayForm
 		if(!empty($this->products))
 			$payment_data['products'] = $this->products;
 
+		if(!empty($this->initiator))
+			$payment_data['initiator'] = $this->initiator;
+
 		return $this->makeRequest($url, $payment_data);
 	}
 
@@ -101,6 +105,11 @@ class PayForm
 	public function addPaymentMethod(array $fields)
 	{
 		$this->payment_method = $fields;
+	}
+
+	public function addInitiator(array $fields)
+	{
+		$this->initiator = $fields;
 	}
 
 	public function createCharge()

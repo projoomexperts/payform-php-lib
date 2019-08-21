@@ -224,6 +224,53 @@ class BamboraPayFomTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($request->result, 0);
 	}
 
+	public function testChargeCardTokenCIT()
+	{
+		$response = array(
+			'result' => 30,
+			'verify' => array(
+				'token' => 'test_token',
+				'type' => '3ds'
+			)
+		);
+
+		$connector = \Mockery::mock('Bambora\PayFormConnector');
+
+		$connector->shouldReceive("request")->with("charge_card_token", array(
+			'amount' => '100',
+			'order_number' => 'a',
+			'currency' => 'EUR',
+			'api_key' => 'TESTAPIKEY',
+			'version' => 'w3.1',
+			'card_token' => 'card_token',
+			'authcode' => 'AD8F8D0FB039C5685D54E9EC1DEEA2972C00C46F2ED4B260481BD225209C0982',
+			'initiator' => array(
+				'type' => 2, 
+				'return_url' => 'https://localhost/return',
+				'notify_url' => 'https://localhost/return'
+			)
+		))->once()->andReturn(json_encode($response));
+
+		$payForm = new Bambora\PayForm('TESTAPIKEY', 'private_key', 'w3.1', $connector);
+
+		$payForm->addCharge(array(
+			'amount' => '100',
+			'order_number' => 'a',
+			'currency' => 'EUR',
+			'card_token' => 'card_token'
+		));
+
+		$payForm->addInitiator(array(
+			'type' => 2, 
+			'return_url' => 'https://localhost/return',
+			'notify_url' => 'https://localhost/return'
+		));
+
+		$request = $payForm->chargeWithCardToken();
+
+		$this->assertEquals($request->result, 30);
+	}
+
 	
 	public function testCapture()
 	{
