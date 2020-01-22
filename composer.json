@@ -1,5 +1,5 @@
 {
-    "name": "bambora/payform",
+    "name": "projoomexperts/payform-php-lib",
     "type": "library",
     "description": "Bambora PayForm PHP Library",
     "keywords": ["payment", "bambora", "payform"],
